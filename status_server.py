@@ -33,9 +33,9 @@ def check(url):
 class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
-        self.headers()
+        self.send_cors_headers()
         self.end_headers()
-    def headers(self):
+    def send_cors_headers(self):
         self.send_header('Content-Type','application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin','https://vanlabs-flickr-follow-checker.onrender.com')
         self.send_header('Access-Control-Allow-Methods','GET, OPTIONS')
