@@ -21,7 +21,9 @@ def check(url):
         req = Request(url, headers={'User-Agent':'Mozilla/5.0 (compatible; VanLabsStatusChecker/1.0)','Accept':'text/html'}, method='GET')
         with urlopen(req, timeout=9) as response:
             code = response.status
-            result = {'status':'ok' if code == 200 else 'other','code':code}
+            body = response.read(240000).decode('utf-8', errors='replace')
+            visible_410 = bool(re.search(r'(?is)(?:<h[1-6][^>]*>\s*410\s*</h[1-6]>|\b410\b.{0,120}questa non (?:è|&egrave;|&#232;) la pagina che)', body))
+            result = {'status':'gone' if visible_410 or code == 410 else 'ok' if code == 200 else 'other','code':code,'reason':'page_410' if visible_410 else 'http_410' if code == 410 else 'http'}
     except HTTPError as e:
         result = {'status':'gone' if e.code == 410 else 'other','code':e.code}
     except (URLError, TimeoutError, OSError, ValueError):
@@ -45,7 +47,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == '/health':
             self.respond({'ok':True});return
         if self.path != '/check':
-            self.send_response(404);self.headers();self.end_headers();return
+            self.send_response(404);self.send_cors_headers();self.end_headers();return
         try:
             with open('profiles.json',encoding='utf-8') as f:
                 urls=json.load(f)
@@ -57,7 +59,7 @@ class Handler(BaseHTTPRequestHandler):
             self.respond({'error':'verification_unavailable'},500)
     def respond(self,data,status=200):
         body=json.dumps(data,ensure_ascii=False).encode()
-        self.send_response(status);self.headers()
+        self.send_response(status);self.send_cors_headers()
         self.send_header('Content-Length',str(len(body)))
         self.end_headers();self.wfile.write(body)
     def log_message(self,*args):pass
