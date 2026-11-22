@@ -6,7 +6,7 @@ from urllib.error import HTTPError, URLError
 
 CACHE = {}
 LOCK = threading.Lock()
-PATTERN = re.compile(r'^https://www[.]flickr[.]com/people/[A-Za-z0-9@._%-]+/?
+PATTERN = re.compile(r'^https://www[.]flickr[.]com/people/[A-Za-z0-9@._%-]+/?$')
 TTL = 1800
 
 def check(url):
